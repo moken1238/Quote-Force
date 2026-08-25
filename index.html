@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Panel — Security Quote</title>
+<title>Panel — Field Tools</title>
 <style>
   :root{
     --ink:#0F1720;
@@ -35,7 +35,6 @@
     max-width:420px;
   }
 
-  /* Header — mimics an alarm panel label plate */
   .plate{
     display:flex;
     align-items:baseline;
@@ -67,10 +66,43 @@
   .tagline{
     color:var(--paper-dim);
     font-size:14px;
-    margin:0 0 26px;
+    margin:0 0 22px;
   }
 
-  /* Line items */
+  /* Tab switcher */
+  .tabs{
+    display:flex;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:4px;
+    margin-bottom:24px;
+    gap:4px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:10px 8px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:.03em;
+    color:var(--paper-dim);
+    border-radius:9px;
+    cursor:pointer;
+    border:none;
+    background:transparent;
+    font-family:inherit;
+    transition:background .15s ease, color .15s ease;
+  }
+  .tab.selected{
+    background:var(--brass);
+    color:var(--ink);
+  }
+
+  .section{display:none;}
+  .section.visible{display:block;}
+
+  /* Line items (quote section) */
   .item{
     background:var(--panel);
     border:1px solid var(--hairline);
@@ -180,6 +212,56 @@
     background:var(--brass);border:3px solid var(--ink);cursor:pointer;
   }
 
+  /* Input fields (reinstatement section) */
+  .field{
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    padding:12px 16px;
+    margin-bottom:10px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .field.active{
+    border-color:var(--brass-dim);
+    background:var(--panel-raised);
+  }
+  .field-label{
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+    margin-bottom:6px;
+    display:block;
+  }
+  .field-input-row{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .field-input-row .prefix{
+    font-family:'Courier New',monospace;
+    font-size:20px;
+    color:var(--brass);
+    font-weight:700;
+  }
+  .field input[type=text]{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--paper);
+    font-family:'Courier New',monospace;
+    font-size:20px;
+    font-weight:700;
+    letter-spacing:.01em;
+    padding:2px 0;
+    min-width:0;
+  }
+  .field input[type=text]::placeholder{
+    color:var(--paper-dim);
+    font-weight:400;
+  }
+
   /* Readout — the "panel display" */
   .readout{
     background:linear-gradient(180deg,#101820,#0B1319);
@@ -203,6 +285,7 @@
     padding:5px 0;
     font-family:'Courier New',monospace;
   }
+  .readout-row .val{color:var(--paper);}
   .readout-row.strike .val{
     text-decoration:line-through;
     color:var(--paper-dim);
@@ -257,56 +340,131 @@
 <div class="device">
 
   <div class="plate">
-    <span class="plate-title">Panel · Quote Builder</span>
+    <span class="plate-title">Panel · Field Tools</span>
     <span class="plate-sub">v1</span>
   </div>
 
-  <h1>Build your quote</h1>
-  <p class="tagline">Set quantities for each item, then apply a discount.</p>
+  <h1 id="pageTitle">Build your quote</h1>
+  <p class="tagline" id="pageTagline">Set quantities for each item, then apply a discount.</p>
 
-  <div id="items"></div>
-
-  <div class="discount-block">
-    <div class="discount-head">
-      <span class="discount-label">Discount</span>
-      <span class="discount-value" id="discountValue">0%</span>
-    </div>
-    <input type="range" id="discountSlider" min="0" max="100" step="1" value="0">
+  <div class="tabs">
+    <button class="tab selected" id="tabQuote" data-target="quote">Quote</button>
+    <button class="tab" id="tabReinstate" data-target="reinstate">Reinstatement</button>
   </div>
 
-  <div class="readout">
-    <div class="readout-row">
-      <span>Subtotal</span>
-      <span class="val" id="subtotalVal">$0.00</span>
+  <!-- QUOTE SECTION -->
+  <div class="section visible" id="section-quote">
+    <div id="items"></div>
+
+    <div class="discount-block">
+      <div class="discount-head">
+        <span class="discount-label">Discount</span>
+        <span class="discount-value" id="discountValue">0%</span>
+      </div>
+      <input type="range" id="discountSlider" min="0" max="100" step="1" value="0">
     </div>
-    <div class="readout-row strike" id="discountRow" style="display:none;">
-      <span id="discountRowLabel">Discount (0%)</span>
-      <span class="val" id="discountAmountVal">−$0.00</span>
+
+    <div class="readout">
+      <div class="readout-row">
+        <span>Subtotal</span>
+        <span class="val" id="subtotalVal">$0.00</span>
+      </div>
+      <div class="readout-row strike" id="discountRow" style="display:none;">
+        <span id="discountRowLabel">Discount (0%)</span>
+        <span class="val" id="discountAmountVal">−$0.00</span>
+      </div>
+      <div class="readout-divider"></div>
+      <div class="readout-total">
+        <span class="label"><span class="status-dot"></span>Total</span>
+        <span class="amount" id="totalVal">$0.00</span>
+      </div>
+      <div class="empty-hint" id="emptyHint">No items selected yet</div>
     </div>
-    <div class="readout-divider"></div>
-    <div class="readout-total">
-      <span class="label"><span class="status-dot"></span>Total</span>
-      <span class="amount" id="totalVal">$0.00</span>
-    </div>
-    <div class="empty-hint" id="emptyHint">No items selected yet</div>
+
+    <p class="footer-note">All prices in USD · Installation not included</p>
   </div>
 
-  <p class="footer-note">All prices in USD · Installation included</p>
+  <!-- REINSTATEMENT SECTION -->
+  <div class="section" id="section-reinstate">
+    <div class="field" id="field-balance">
+      <span class="field-label">Total Balance Due</span>
+      <div class="field-input-row">
+        <span class="prefix">$</span>
+        <input type="text" inputmode="decimal" id="balance" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="field" id="field-etf">
+      <span class="field-label">Early Term Fees</span>
+      <div class="field-input-row">
+        <span class="prefix">$</span>
+        <input type="text" inputmode="decimal" id="etf" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="field" id="field-rmr">
+      <span class="field-label">RMR (Recurring Monthly Revenue)</span>
+      <div class="field-input-row">
+        <span class="prefix">$</span>
+        <input type="text" inputmode="decimal" id="rmr" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="readout-row">
+        <span>3mo Credit (RMR × 3)</span>
+        <span class="val" id="creditVal">$0.00</span>
+      </div>
+      <div class="readout-row">
+        <span>Total Amount Waived</span>
+        <span class="val" id="waivedVal">$0.00</span>
+      </div>
+      <div class="readout-divider"></div>
+      <div class="readout-total">
+        <span class="label"><span class="status-dot"></span>To Collect</span>
+        <span class="amount" id="collectVal">$0.00</span>
+      </div>
+      <div class="empty-hint" id="emptyHintReinstate">Enter balance, fees, and RMR above</div>
+    </div>
+
+    <p class="footer-note">To Collect = Balance − (Early Term Fee + 3mo Credit)</p>
+  </div>
+
 </div>
 
 <script>
+  /* ---------- Tab switching ---------- */
+  const tabs = {
+    quote: { btn: document.getElementById('tabQuote'), title: 'Build your quote', tag: 'Set quantities for each item, then apply a discount.' },
+    reinstate: { btn: document.getElementById('tabReinstate'), title: 'Reinstatement calculator', tag: 'Enter the account details to calculate the amount to collect.' },
+  };
+  const pageTitle = document.getElementById('pageTitle');
+  const pageTagline = document.getElementById('pageTagline');
+
+  function switchTab(target){
+    Object.keys(tabs).forEach(key => {
+      tabs[key].btn.classList.toggle('selected', key === target);
+      document.getElementById('section-' + key).classList.toggle('visible', key === target);
+    });
+    pageTitle.textContent = tabs[target].title;
+    pageTagline.textContent = tabs[target].tag;
+  }
+  tabs.quote.btn.addEventListener('click', () => switchTab('quote'));
+  tabs.reinstate.btn.addEventListener('click', () => switchTab('reinstate'));
+
+  /* ---------- Quote section ---------- */
   const ITEMS = [
-    { id: 'base',      name: 'ADT V5 Base',                  price: 449    },
-    { id: 'bundle',    name: 'Bundle',                        price: 150    },
-    { id: 'contact',   name: 'Contact Sensor',                price: 50     },
-    { id: 'motionglass',name: 'Motion / Glass Break',         price: 100    },
-    { id: 'smokecarbon',name: 'Smoke Carbon Combo',           price: 195    },
-    { id: 'smokeheat', name: 'Smoke / Carbon / Heat Detector', price: 120   },
-    { id: 'doorbell',  name: 'Doorbell Camera',               price: 279.99 },
-    { id: 'outdoor',   name: 'Outdoor Camera',                price: 319.99 },
-    { id: 'indoor',    name: 'Indoor Camera',                 price: 199.99 },
-    { id: 'floodlight',name: 'Floodlight Camera',             price: 309.99 },
-    { id: 'lock',      name: 'Smart Lock',                    price: 399.99 },
+    { id: 'base',       name: 'ADT V5 Base',                   price: 450    },
+    { id: 'bundle',     name: 'Bundle',                         price: 150    },
+    { id: 'contact',    name: 'Contact Sensor',                 price: 50     },
+    { id: 'motionglass',name: 'Motion / Glass Break',           price: 100    },
+    { id: 'smokecarbon',name: 'Smoke Carbon Combo',             price: 195    },
+    { id: 'smokeheat',  name: 'Smoke / Carbon / Heat Detector', price: 120    },
+    { id: 'doorbell',   name: 'Doorbell Camera',                price: 279.99 },
+    { id: 'outdoor',    name: 'Outdoor Camera',                 price: 319.99 },
+    { id: 'indoor',     name: 'Indoor Camera',                  price: 199.99 },
+    { id: 'floodlight', name: 'Floodlight Camera',              price: 309.99 },
+    { id: 'lock',       name: 'Smart Lock',                     price: 399.99 },
   ];
 
   const state = {};
@@ -338,12 +496,12 @@
         state[id] = Math.max(0, Math.min(20, state[id] + dir));
         document.getElementById(`count-${id}`).textContent = state[id];
         document.getElementById(`item-${id}`).classList.toggle('active', state[id] > 0);
-        recalc();
+        recalcQuote();
       });
     });
   }
 
-  function recalc(){
+  function recalcQuote(){
     const subtotal = ITEMS.reduce((sum, i) => sum + i.price * state[i.id], 0);
     const discountAmount = subtotal * (discount / 100);
     const total = subtotal - discountAmount;
@@ -368,11 +526,50 @@
   slider.addEventListener('input', () => {
     discount = parseInt(slider.value, 10);
     discountValueEl.textContent = discount + '%';
-    recalc();
+    recalcQuote();
   });
 
   renderItems();
-  recalc();
+  recalcQuote();
+
+  /* ---------- Reinstatement section ---------- */
+  const balanceEl = document.getElementById('balance');
+  const etfEl = document.getElementById('etf');
+  const rmrEl = document.getElementById('rmr');
+
+  const fieldBalance = document.getElementById('field-balance');
+  const fieldEtf = document.getElementById('field-etf');
+  const fieldRmr = document.getElementById('field-rmr');
+
+  function parseNum(str){
+    const n = parseFloat(String(str).replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function recalcReinstate(){
+    const balance = parseNum(balanceEl.value);
+    const etf = parseNum(etfEl.value);
+    const rmr = parseNum(rmrEl.value);
+
+    fieldBalance.classList.toggle('active', balanceEl.value.trim() !== '');
+    fieldEtf.classList.toggle('active', etfEl.value.trim() !== '');
+    fieldRmr.classList.toggle('active', rmrEl.value.trim() !== '');
+
+    const credit = rmr * 3;
+    const waived = etf + credit;
+    const toCollect = balance - waived;
+
+    document.getElementById('creditVal').textContent = fmt(credit);
+    document.getElementById('waivedVal').textContent = fmt(waived);
+    document.getElementById('collectVal').textContent = fmt(toCollect);
+
+    const hasInput = balanceEl.value.trim() !== '' || etfEl.value.trim() !== '' || rmrEl.value.trim() !== '';
+    document.getElementById('emptyHintReinstate').style.display = hasInput ? 'none' : 'block';
+  }
+
+  [balanceEl, etfEl, rmrEl].forEach(el => el.addEventListener('input', recalcReinstate));
+
+  recalcReinstate();
 </script>
 </body>
 </html>
