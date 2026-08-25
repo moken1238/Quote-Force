@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Panel — Security Quote</title>
+<style>
+  :root{
+    --ink:#0F1720;
+    --panel:#161F2B;
+    --panel-raised:#1C2733;
+    --hairline:#2A3745;
+    --paper:#EDE7DA;
+    --paper-dim:#9CA8B4;
+    --brass:#D4A24C;
+    --brass-dim:#8A6E3C;
+    --armed:#4ADE80;
+    --danger:#E8654A;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 50% -10%, #1A2431 0%, var(--ink) 55%);
+    color:var(--paper);
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:28px 14px 60px;
+  }
+  .device{
+    width:100%;
+    max-width:420px;
+  }
+
+  /* Header — mimics an alarm panel label plate */
+  .plate{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:0 4px 18px;
+    border-bottom:1px solid var(--hairline);
+    margin-bottom:22px;
+  }
+  .plate-title{
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    letter-spacing:.28em;
+    color:var(--brass);
+    text-transform:uppercase;
+  }
+  .plate-sub{
+    font-size:11px;
+    letter-spacing:.1em;
+    color:var(--paper-dim);
+    text-transform:uppercase;
+  }
+
+  h1{
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-.01em;
+    margin:0 0 4px;
+  }
+  .tagline{
+    color:var(--paper-dim);
+    font-size:14px;
+    margin:0 0 26px;
+  }
+
+  /* Line items */
+  .item{
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .item.active{
+    border-color:var(--brass-dim);
+    background:var(--panel-raised);
+  }
+  .item-info{display:flex;flex-direction:column;gap:3px;}
+  .item-name{font-size:15px;font-weight:600;color:var(--paper);}
+  .item-price{
+    font-family:'Courier New',monospace;
+    font-size:12px;
+    color:var(--paper-dim);
+    letter-spacing:.03em;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:0;
+    background:var(--ink);
+    border:1px solid var(--hairline);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .stepper button{
+    width:34px;
+    height:34px;
+    border:none;
+    background:transparent;
+    color:var(--paper);
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:background .12s ease, color .12s ease;
+  }
+  .stepper button:active{background:var(--brass);color:var(--ink);}
+  .stepper button.minus{color:var(--paper-dim);}
+  .stepper .count{
+    width:30px;
+    text-align:center;
+    font-family:'Courier New',monospace;
+    font-size:15px;
+    font-weight:700;
+    color:var(--brass);
+  }
+
+  /* Discount control */
+  .discount-block{
+    margin:26px 0 20px;
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    padding:16px 16px 18px;
+  }
+  .discount-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+  }
+  .discount-label{
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--paper-dim);
+  }
+  .discount-value{
+    font-family:'Courier New',monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--brass);
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:4px;
+    border-radius:2px;
+    background:var(--hairline);
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:20px;height:20px;border-radius:50%;
+    background:var(--brass);
+    border:3px solid var(--ink);
+    box-shadow:0 0 0 1px var(--brass-dim);
+    cursor:pointer;
+    margin-top:-8px;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:4px;border-radius:2px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--brass);border:3px solid var(--ink);cursor:pointer;
+  }
+
+  /* Readout — the "panel display" */
+  .readout{
+    background:linear-gradient(180deg,#101820,#0B1319);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    padding:18px 18px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .readout::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, transparent, var(--armed), transparent);
+    opacity:.55;
+  }
+  .readout-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13px;
+    color:var(--paper-dim);
+    padding:5px 0;
+    font-family:'Courier New',monospace;
+  }
+  .readout-row.strike .val{
+    text-decoration:line-through;
+    color:var(--paper-dim);
+  }
+  .readout-divider{
+    height:1px;background:var(--hairline);margin:10px 0;
+  }
+  .readout-total{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .readout-total .label{
+    font-size:12px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--armed);
+  }
+  .readout-total .amount{
+    font-family:'Courier New',monospace;
+    font-size:34px;
+    font-weight:700;
+    color:var(--paper);
+    letter-spacing:-.01em;
+  }
+  .status-dot{
+    display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--armed);
+    margin-right:7px;
+    box-shadow:0 0 6px var(--armed);
+  }
+
+  .empty-hint{
+    text-align:center;
+    color:var(--paper-dim);
+    font-size:12px;
+    padding:8px 0 2px;
+    letter-spacing:.02em;
+  }
+
+  .footer-note{
+    text-align:center;
+    color:var(--paper-dim);
+    font-size:11px;
+    letter-spacing:.06em;
+    margin-top:22px;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="device">
+
+  <div class="plate">
+    <span class="plate-title">Panel · Quote Builder</span>
+    <span class="plate-sub">v1</span>
+  </div>
+
+  <h1>Build your quote</h1>
+  <p class="tagline">Set quantities for each item, then apply a discount.</p>
+
+  <div id="items"></div>
+
+  <div class="discount-block">
+    <div class="discount-head">
+      <span class="discount-label">Discount</span>
+      <span class="discount-value" id="discountValue">0%</span>
+    </div>
+    <input type="range" id="discountSlider" min="0" max="100" step="1" value="0">
+  </div>
+
+  <div class="readout">
+    <div class="readout-row">
+      <span>Subtotal</span>
+      <span class="val" id="subtotalVal">$0.00</span>
+    </div>
+    <div class="readout-row strike" id="discountRow" style="display:none;">
+      <span id="discountRowLabel">Discount (0%)</span>
+      <span class="val" id="discountAmountVal">−$0.00</span>
+    </div>
+    <div class="readout-divider"></div>
+    <div class="readout-total">
+      <span class="label"><span class="status-dot"></span>Total</span>
+      <span class="amount" id="totalVal">$0.00</span>
+    </div>
+    <div class="empty-hint" id="emptyHint">No items selected yet</div>
+  </div>
+
+  <p class="footer-note">All prices in USD · Installation not included</p>
+</div>
+
+<script>
+  const ITEMS = [
+    { id: 'base',      name: 'ADT V5 Base',                  price: 399    },
+    { id: 'bundle',    name: 'Bundle',                        price: 200    },
+    { id: 'contact',   name: 'Contact Sensor',                price: 50     },
+    { id: 'motionglass',name: 'Motion / Glass Break',         price: 100    },
+    { id: 'smokecarbon',name: 'Smoke Carbon Combo',           price: 195    },
+    { id: 'smokeheat', name: 'Smoke / Carbon / Heat Detector', price: 120   },
+    { id: 'doorbell',  name: 'Doorbell Camera',               price: 279.99 },
+    { id: 'outdoor',   name: 'Outdoor Camera',                price: 319.99 },
+    { id: 'indoor',    name: 'Indoor Camera',                 price: 199.99 },
+    { id: 'floodlight',name: 'Floodlight Camera',             price: 309.99 },
+    { id: 'lock',      name: 'Smart Lock',                    price: 399.99 },
+  ];
+
+  const state = {};
+  ITEMS.forEach(i => state[i.id] = 0);
+  let discount = 0;
+
+  const itemsEl = document.getElementById('items');
+  const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function renderItems(){
+    itemsEl.innerHTML = ITEMS.map(item => `
+      <div class="item ${state[item.id] > 0 ? 'active' : ''}" id="item-${item.id}">
+        <div class="item-info">
+          <span class="item-name">${item.name}</span>
+          <span class="item-price">${fmt(item.price)} each</span>
+        </div>
+        <div class="stepper">
+          <button class="minus" data-id="${item.id}" data-dir="-1" aria-label="Decrease ${item.name}">−</button>
+          <span class="count" id="count-${item.id}">${state[item.id]}</span>
+          <button data-id="${item.id}" data-dir="1" aria-label="Increase ${item.name}">+</button>
+        </div>
+      </div>
+    `).join('');
+
+    itemsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const dir = parseInt(btn.dataset.dir, 10);
+        state[id] = Math.max(0, Math.min(20, state[id] + dir));
+        document.getElementById(`count-${id}`).textContent = state[id];
+        document.getElementById(`item-${id}`).classList.toggle('active', state[id] > 0);
+        recalc();
+      });
+    });
+  }
+
+  function recalc(){
+    const subtotal = ITEMS.reduce((sum, i) => sum + i.price * state[i.id], 0);
+    const discountAmount = subtotal * (discount / 100);
+    const total = subtotal - discountAmount;
+
+    document.getElementById('subtotalVal').textContent = fmt(subtotal);
+    document.getElementById('totalVal').textContent = fmt(total);
+
+    const discountRow = document.getElementById('discountRow');
+    if (discount > 0 && subtotal > 0) {
+      discountRow.style.display = 'flex';
+      document.getElementById('discountRowLabel').textContent = `Discount (${discount}%)`;
+      document.getElementById('discountAmountVal').textContent = '−' + fmt(discountAmount);
+    } else {
+      discountRow.style.display = 'none';
+    }
+
+    document.getElementById('emptyHint').style.display = subtotal > 0 ? 'none' : 'block';
+  }
+
+  const slider = document.getElementById('discountSlider');
+  const discountValueEl = document.getElementById('discountValue');
+  slider.addEventListener('input', () => {
+    discount = parseInt(slider.value, 10);
+    discountValueEl.textContent = discount + '%';
+    recalc();
+  });
+
+  renderItems();
+  recalc();
+</script>
+</body>
+</html>
